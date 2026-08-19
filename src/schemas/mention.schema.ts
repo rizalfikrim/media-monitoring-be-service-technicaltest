@@ -12,3 +12,5 @@ export const rawMentionSchema = z.object({
 });
 
 export type RawMention = z.infer<typeof rawMentionSchema>;
+
+export const bulkMentionSchema = z.array(rawMentionSchema).min(1);

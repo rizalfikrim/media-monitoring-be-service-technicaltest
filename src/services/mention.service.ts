@@ -1,3 +1,4 @@
+import { bulkInsertMentions } from '../repositories/mention.repository.js';
 import { rawMentionSchema, type RawMention } from '../schemas/mention.schema.js';
 import type { NormalizedMention } from '../types/mention.js';
 import { InvalidDateError, parsePublishedAt } from '../utils/date.js';
@@ -8,6 +9,33 @@ import { normalizeSource, normalizeText, stripHtml } from '../utils/text.js';
 export type NormalizeResult =
   | { ok: true; mention: NormalizedMention }
   | { ok: false; reason: string };
+
+export interface BulkResult {
+  received: number;
+  inserted: number;
+  duplicates: number;
+  rejected: number;
+}
+
+export async function processBulkMentions(records: RawMention[]): Promise<BulkResult> {
+  const normalized: NormalizedMention[] = [];
+  let rejected = 0;
+
+  for (const record of records) {
+    const result = normalizeRawMention(record);
+    if (result.ok) {
+      normalized.push(result.mention);
+    } else {
+      rejected++;
+    }
+  }
+
+  const received = records.length;
+  const inserted = await bulkInsertMentions(normalized);
+  const duplicates = normalized.length - inserted;
+
+  return { received, inserted, duplicates, rejected };
+}
 
 export function normalizeRawMention(raw: unknown): NormalizeResult {
   const parsed = rawMentionSchema.safeParse(raw);

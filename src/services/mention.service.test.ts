@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { normalizeRawMention } from './mention.service.js';
+import { randomUUID } from 'node:crypto';
+import { afterAll, describe, expect, it } from 'vitest';
+import { pool } from '../config/database.js';
+import { normalizeRawMention, processBulkMentions } from './mention.service.js';
 
 describe('normalizeRawMention', () => {
   it('normalizes a full valid record', () => {
@@ -96,5 +98,42 @@ describe('normalizeRawMention', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reason).toBe('invalid record structure');
+  });
+});
+
+describe('processBulkMentions', () => {
+  const source = `test-src-${randomUUID()}`;
+
+  afterAll(async () => {
+    await pool.query('DELETE FROM mentions WHERE source = $1', [source]);
+    await pool.end();
+  });
+
+  it('returns a correct summary for a mixed batch', async () => {
+    const result = await processBulkMentions([
+      { source, title: 'A', content: 'a', published_at: '2026-08-10T08:15:00Z', engagement: '1,204' },
+      { source, title: 'B', content: 'b' },
+      { source: '', title: 'C', content: 'c' },
+      { title: 'D', content: 'd' },
+      { source, title: 'E', content: 'e', published_at: 'gibberish' },
+      { source, title: 'A', content: 'a', published_at: '2026-08-10T08:15:00Z' },
+    ]);
+
+    expect(result.received).toBe(6);
+    expect(result.inserted).toBe(2);
+    expect(result.duplicates).toBe(1);
+    expect(result.rejected).toBe(3);
+  });
+
+  it('is idempotent across requests', async () => {
+    const records = [{ source, title: 'Idempotent', content: 'c' }];
+
+    const first = await processBulkMentions(records);
+    const second = await processBulkMentions(records);
+
+    expect(first.inserted).toBe(1);
+    expect(first.duplicates).toBe(0);
+    expect(second.inserted).toBe(0);
+    expect(second.duplicates).toBe(1);
   });
 });
