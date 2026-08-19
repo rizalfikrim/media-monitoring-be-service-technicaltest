@@ -14,3 +14,29 @@ export const rawMentionSchema = z.object({
 export type RawMention = z.infer<typeof rawMentionSchema>;
 
 export const bulkMentionSchema = z.array(rawMentionSchema).min(1);
+
+const isParsableDate = (value: string): boolean => !Number.isNaN(Date.parse(value));
+
+export const searchMentionsQuerySchema = z
+  .object({
+    q: z.string().trim().optional(),
+    source: z.string().trim().optional(),
+    from: z
+      .string()
+      .trim()
+      .refine(isParsableDate, 'Invalid date format')
+      .optional(),
+    to: z
+      .string()
+      .trim()
+      .refine(isParsableDate, 'Invalid date format')
+      .optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+  })
+  .refine((value) => !value.from || !value.to || Date.parse(value.from) <= Date.parse(value.to), {
+    path: ['from'],
+    message: 'from must not be greater than to',
+  });
+
+export type SearchMentionsQuery = z.infer<typeof searchMentionsQuerySchema>;

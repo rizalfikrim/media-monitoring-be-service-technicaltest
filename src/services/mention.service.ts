@@ -1,6 +1,14 @@
-import { bulkInsertMentions } from '../repositories/mention.repository.js';
-import { rawMentionSchema, type RawMention } from '../schemas/mention.schema.js';
-import type { NormalizedMention } from '../types/mention.js';
+import {
+  bulkInsertMentions,
+  searchMentions as searchMentionsRepo,
+  type MentionRow,
+} from '../repositories/mention.repository.js';
+import {
+  rawMentionSchema,
+  type RawMention,
+  type SearchMentionsQuery,
+} from '../schemas/mention.schema.js';
+import type { NormalizedMention, SearchMention } from '../types/mention.js';
 import { InvalidDateError, parsePublishedAt } from '../utils/date.js';
 import { generateDedupeKey } from '../utils/dedupe.js';
 import { parseEngagement } from '../utils/engagement.js';
@@ -35,6 +43,66 @@ export async function processBulkMentions(records: RawMention[]): Promise<BulkRe
   const duplicates = normalized.length - inserted;
 
   return { received, inserted, duplicates, rejected };
+}
+
+const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseSearchDate(value: string | undefined, endOfDay: boolean): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  if (dateOnlyRegex.test(value)) {
+    return new Date(endOfDay ? `${value}T23:59:59.999Z` : `${value}T00:00:00.000Z`);
+  }
+  return new Date(value);
+}
+
+function toSearchMention(row: MentionRow): SearchMention {
+  return {
+    id: Number(row.id),
+    externalId: row.external_id,
+    source: row.source,
+    title: row.title,
+    content: row.content,
+    url: row.url,
+    author: row.author,
+    publishedAt: row.published_at,
+    engagement: row.engagement === null ? null : Number(row.engagement),
+    createdAt: row.created_at,
+  };
+}
+
+export interface SearchMentionsResult {
+  data: SearchMention[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export async function searchMentions(query: SearchMentionsQuery): Promise<SearchMentionsResult> {
+  const source = query.source ? normalizeSource(query.source) : undefined;
+
+  const { rows, total } = await searchMentionsRepo({
+    q: query.q || undefined,
+    source: source ?? undefined,
+    from: parseSearchDate(query.from, false),
+    to: parseSearchDate(query.to, true),
+    page: query.page,
+    limit: query.limit,
+  });
+
+  return {
+    data: rows.map(toSearchMention),
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages: total === 0 ? 0 : Math.ceil(total / query.limit),
+    },
+  };
 }
 
 export function normalizeRawMention(raw: unknown): NormalizeResult {

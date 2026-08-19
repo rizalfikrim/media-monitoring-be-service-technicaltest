@@ -13,8 +13,8 @@ function makeMention(id: string): NormalizedMention {
     source,
     title: `Title ${id}`,
     content: `Content ${id}`,
-    url: null,
-    author: null,
+    url: `https://example.com/${id}`,
+    author: `Author ${id}`,
     published_at: new Date('2026-08-10T08:15:00Z'),
     engagement: 1,
     dedupe_key: generateDedupeKey({
@@ -35,6 +35,22 @@ describe('bulkInsertMentions', () => {
   it('inserts a new batch and returns the inserted count', async () => {
     const inserted = await bulkInsertMentions([makeMention('a'), makeMention('b')]);
     expect(inserted).toBe(2);
+  });
+
+  it('persists all normalized fields', async () => {
+    const id = 'persist';
+    await bulkInsertMentions([makeMention(id)]);
+    const result = await pool.query(
+      `SELECT external_id, source, title, content, url, author, published_at, engagement, dedupe_key
+       FROM mentions
+       WHERE source = $1`,
+      [source],
+    );
+    const row = result.rows.find((r) => r.external_id === id);
+    expect(row).toBeDefined();
+    expect(row.title).toBe(`Title ${id}`);
+    expect(row.url).toBe(`https://example.com/${id}`);
+    expect(row.author).toBe(`Author ${id}`);
   });
 
   it('is idempotent: inserting the same batch again returns 0', async () => {
