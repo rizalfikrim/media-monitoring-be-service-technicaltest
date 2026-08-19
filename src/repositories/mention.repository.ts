@@ -76,6 +76,33 @@ export async function searchMentions(
   };
 }
 
+export interface StatItem {
+  key: string;
+  count: number;
+}
+
+export async function statsBySource(): Promise<StatItem[]> {
+  const result = await pool.query<StatItem>(
+    `SELECT source AS key, COUNT(*)::int AS count
+     FROM mentions
+     GROUP BY source
+     ORDER BY count DESC, source ASC`,
+  );
+  return result.rows;
+}
+
+export async function statsByDay(): Promise<StatItem[]> {
+  const result = await pool.query<StatItem>(
+    `SELECT TO_CHAR((published_at AT TIME ZONE 'UTC')::date, 'YYYY-MM-DD') AS key,
+            COUNT(*)::int AS count
+     FROM mentions
+     WHERE published_at IS NOT NULL
+     GROUP BY (published_at AT TIME ZONE 'UTC')::date
+     ORDER BY key ASC`,
+  );
+  return result.rows;
+}
+
 export async function bulkInsertMentions(mentions: NormalizedMention[]): Promise<number> {
   if (mentions.length === 0) {
     return 0;

@@ -40,3 +40,9 @@ export const searchMentionsQuerySchema = z
   });
 
 export type SearchMentionsQuery = z.infer<typeof searchMentionsQuerySchema>;
+
+export const statsQuerySchema = z.object({
+  group_by: z.enum(['source', 'day']),
+});
+
+export type StatsQuery = z.infer<typeof statsQuerySchema>;

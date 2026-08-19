@@ -1,12 +1,15 @@
 import {
   bulkInsertMentions,
   searchMentions as searchMentionsRepo,
+  statsByDay,
+  statsBySource,
   type MentionRow,
 } from '../repositories/mention.repository.js';
 import {
   rawMentionSchema,
   type RawMention,
   type SearchMentionsQuery,
+  type StatsQuery,
 } from '../schemas/mention.schema.js';
 import type { NormalizedMention, SearchMention } from '../types/mention.js';
 import { InvalidDateError, parsePublishedAt } from '../utils/date.js';
@@ -103,6 +106,16 @@ export async function searchMentions(query: SearchMentionsQuery): Promise<Search
       totalPages: total === 0 ? 0 : Math.ceil(total / query.limit),
     },
   };
+}
+
+export interface MentionStatsResult {
+  group_by: StatsQuery['group_by'];
+  data: Array<{ key: string; count: number }>;
+}
+
+export async function getMentionStats(groupBy: StatsQuery['group_by']): Promise<MentionStatsResult> {
+  const data = groupBy === 'source' ? await statsBySource() : await statsByDay();
+  return { group_by: groupBy, data };
 }
 
 export function normalizeRawMention(raw: unknown): NormalizeResult {

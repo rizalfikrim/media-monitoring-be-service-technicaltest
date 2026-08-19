@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { bulkMentionSchema, searchMentionsQuerySchema } from './mention.schema.js';
+import {
+  bulkMentionSchema,
+  searchMentionsQuerySchema,
+  statsQuerySchema,
+} from './mention.schema.js';
 
 describe('bulkMentionSchema', () => {
   it('accepts a non-empty array of raw mentions', () => {
@@ -60,5 +64,17 @@ describe('searchMentionsQuerySchema', () => {
     if (!result.success) return;
     expect(result.data.q).toBe('ringgit');
     expect(result.data.source).toBe('the star');
+  });
+});
+
+describe('statsQuerySchema', () => {
+  it('accepts source and day', () => {
+    expect(statsQuerySchema.safeParse({ group_by: 'source' }).success).toBe(true);
+    expect(statsQuerySchema.safeParse({ group_by: 'day' }).success).toBe(true);
+  });
+
+  it('rejects invalid and missing group_by', () => {
+    expect(statsQuerySchema.safeParse({ group_by: 'week' }).success).toBe(false);
+    expect(statsQuerySchema.safeParse({}).success).toBe(false);
   });
 });
