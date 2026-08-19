@@ -8,6 +8,14 @@ function parsePort(value: string | undefined): number {
   return port;
 }
 
+function parseDatabaseUrl(value: string | undefined): string {
+  if (!value || !/^postgres(ql)?:\/\//.test(value)) {
+    throw new Error('DATABASE_URL is required and must be a valid postgresql:// connection string.');
+  }
+  return value;
+}
+
 export const config = {
   port: parsePort(process.env.PORT),
+  databaseUrl: parseDatabaseUrl(process.env.DATABASE_URL),
 } as const;
