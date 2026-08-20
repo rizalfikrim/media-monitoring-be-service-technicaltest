@@ -27,18 +27,18 @@ Hasilnya: data tersimpan **bersih dan konsisten**, setiap mention logis hanya te
 
 ## 2. Key Features
 
-| Fitur | Keterangan |
-|---|---|
-| Bulk ingestion | `POST /internal/mentions/bulk` menerima banyak record sekaligus |
-| Normalisasi | trim, normalisasi spasi, source lowercase, strip HTML, parse tanggal, parse engagement |
-| Validasi | request validation (Zod) + business validation (source wajib, title/content wajib minimal satu) |
-| Duplikasi & idempotency | `dedupe_key` SHA-256 + `UNIQUE` constraint di database; pengiriman ulang tidak membuat baris baru |
-| Search | `GET /mentions` dengan keyword, filter source, filter rentang tanggal |
-| Pagination | `page`/`limit` dengan metadata `total` & `totalPages`, max `limit` 100 |
-| Date filtering | tanggal bisa berupa date-only atau datetime penuh; `to` date-only bersifat inklusif hingga akhir hari |
-| Statistics | `GET /mentions/stats?group_by=source\|day` |
-| Error handling konsisten | 400/404/500 semuanya JSON dengan format sama; tidak ada stack trace bocor ke client |
-| Automated tests | 12 file test, unit + repository + service + HTTP integration + seed fidelity |
+| Fitur                    | Keterangan                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Bulk ingestion           | `POST /internal/mentions/bulk` menerima banyak record sekaligus                                       |
+| Normalisasi              | trim, normalisasi spasi, source lowercase, strip HTML, parse tanggal, parse engagement                |
+| Validasi                 | request validation (Zod) + business validation (source wajib, title/content wajib minimal satu)       |
+| Duplikasi & idempotency  | `dedupe_key` SHA-256 + `UNIQUE` constraint di database; pengiriman ulang tidak membuat baris baru     |
+| Search                   | `GET /mentions` dengan keyword, filter source, filter rentang tanggal                                 |
+| Pagination               | `page`/`limit` dengan metadata `total` & `totalPages`, max `limit` 100                                |
+| Date filtering           | tanggal bisa berupa date-only atau datetime penuh; `to` date-only bersifat inklusif hingga akhir hari |
+| Statistics               | `GET /mentions/stats?group_by=source\|day`                                                            |
+| Error handling konsisten | 400/404/500 semuanya JSON dengan format sama; tidak ada stack trace bocor ke client                   |
+| Automated tests          | 12 file test, unit + repository + service + HTTP integration + seed fidelity                          |
 
 ---
 
@@ -54,13 +54,13 @@ HTTP route
   → PostgreSQL
 ```
 
-| Layer | Tanggung jawab |
-|---|---|
-| `routes/` | Mendefinisikan HTTP method & path, menghubungkan ke controller |
-| `controllers/` | Memvalidasi request/query via Zod, memanggil service, membentuk HTTP response. Tetap tipis |
-| `services/` | Business logic: normalisasi, business validation, dedupe key, mapping response |
-| `repositories/` | Semua SQL (insert, search, count, stats). Satu-satunya layer yang menyentuh database |
-| `utils/` | Fungsi murni: teks, tanggal, dedupe, engagement |
+| Layer           | Tanggung jawab                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `routes/`       | Mendefinisikan HTTP method & path, menghubungkan ke controller                             |
+| `controllers/`  | Memvalidasi request/query via Zod, memanggil service, membentuk HTTP response. Tetap tipis |
+| `services/`     | Business logic: normalisasi, business validation, dedupe key, mapping response             |
+| `repositories/` | Semua SQL (insert, search, count, stats). Satu-satunya layer yang menyentuh database       |
+| `utils/`        | Fungsi murni: teks, tanggal, dedupe, engagement                                            |
 
 Normalisasi & validasi bisnis terjadi di **service layer**; request/query validation di **controller layer** (lewat schema Zod); SQL hanya ada di **repository layer**.
 
@@ -68,18 +68,18 @@ Normalisasi & validasi bisnis terjadi di **service layer**; request/query valida
 
 ## 4. Tech Stack
 
-| Teknologi | Peran |
-|---|---|
-| Node.js (>= 20) | Runtime |
-| TypeScript | Type safety, strict mode |
-| Express | HTTP framework |
-| PostgreSQL | Penyimpanan persistent |
-| pg | Akses PostgreSQL (tanpa ORM; schema eksplisit lewat SQL migration) |
-| Zod | Validasi request body & query parameter |
-| he | Decode entity HTML saat strip HTML |
-| Vitest | Test runner |
-| tsx | Menjalankan TypeScript langsung saat development |
-| Docker / Docker Compose | Lingkungan PostgreSQL lokal (opsional, jalur ideal reviewer) |
+| Teknologi               | Peran                                                              |
+| ----------------------- | ------------------------------------------------------------------ |
+| Node.js (>= 20)         | Runtime                                                            |
+| TypeScript              | Type safety, strict mode                                           |
+| Express                 | HTTP framework                                                     |
+| PostgreSQL              | Penyimpanan persistent                                             |
+| pg                      | Akses PostgreSQL (tanpa ORM; schema eksplisit lewat SQL migration) |
+| Zod                     | Validasi request body & query parameter                            |
+| he                      | Decode entity HTML saat strip HTML                                 |
+| Vitest                  | Test runner                                                        |
+| tsx                     | Menjalankan TypeScript langsung saat development                   |
+| Docker / Docker Compose | Lingkungan PostgreSQL lokal (opsional, jalur ideal reviewer)       |
 
 ---
 
@@ -153,10 +153,10 @@ PORT=3000
 DATABASE_URL=postgresql://monitor:monitor@localhost:5433/media_monitoring
 ```
 
-| Variable | Wajib | Keterangan |
-|---|---|---|
-| `PORT` | Tidak (default `3000`) | Port HTTP server; harus integer 1–65535 |
-| `DATABASE_URL` | Ya | Connection string `postgresql://...`; divalidasi saat startup |
+| Variable       | Wajib                  | Keterangan                                                    |
+| -------------- | ---------------------- | ------------------------------------------------------------- |
+| `PORT`         | Tidak (default `3000`) | Port HTTP server; harus integer 1–65535                       |
+| `DATABASE_URL` | Ya                     | Connection string `postgresql://...`; divalidasi saat startup |
 
 `.env` tidak ter-commit (ada di `.gitignore`).
 
@@ -166,19 +166,19 @@ DATABASE_URL=postgresql://monitor:monitor@localhost:5433/media_monitoring
 
 Satu tabel utama: `mentions` (detail lengkap di `DATABASE.md`).
 
-| Kolom | Tipe | Keterangan |
-|---|---|---|
-| `id` | BIGSERIAL | Primary key |
-| `external_id` | TEXT | ID dari sumber asal |
-| `source` | TEXT (NOT NULL) | Source ternormalisasi (lowercase) |
-| `title` | TEXT | Judul |
-| `content` | TEXT | Konten bersih (HTML sudah di-strip) |
-| `url` | TEXT | URL asli |
-| `author` | TEXT | Penulis/akun |
-| `published_at` | TIMESTAMPTZ | Waktu terbit (bisa NULL) |
-| `engagement` | BIGINT | Nilai engagement (bisa NULL) |
-| `dedupe_key` | CHAR(64) (NOT NULL, UNIQUE) | SHA-256 untuk deteksi duplikasi |
-| `created_at` | TIMESTAMPTZ | Waktu record masuk (default now) |
+| Kolom          | Tipe                        | Keterangan                          |
+| -------------- | --------------------------- | ----------------------------------- |
+| `id`           | BIGSERIAL                   | Primary key                         |
+| `external_id`  | TEXT                        | ID dari sumber asal                 |
+| `source`       | TEXT (NOT NULL)             | Source ternormalisasi (lowercase)   |
+| `title`        | TEXT                        | Judul                               |
+| `content`      | TEXT                        | Konten bersih (HTML sudah di-strip) |
+| `url`          | TEXT                        | URL asli                            |
+| `author`       | TEXT                        | Penulis/akun                        |
+| `published_at` | TIMESTAMPTZ                 | Waktu terbit (bisa NULL)            |
+| `engagement`   | BIGINT                      | Nilai engagement (bisa NULL)        |
+| `dedupe_key`   | CHAR(64) (NOT NULL, UNIQUE) | SHA-256 untuk deteksi duplikasi     |
+| `created_at`   | TIMESTAMPTZ                 | Waktu record masuk (default now)    |
 
 Index: `idx_mentions_source` (source), `idx_mentions_published_at` (published_at DESC).
 
@@ -203,19 +203,19 @@ Raw input
 
 Behavior untuk nilai invalid/missing (keputusan yang disetujui developer):
 
-| Kasus | Perilaku |
-|---|---|
-| `source` kosong setelah normalisasi | **Record ditolak** (rejected) |
-| `title` dan `content` sama-sama kosong/null | **Record ditolak** (rejected) |
-| `published_at` tidak ada / null / string kosong | Disimpan sebagai **NULL**, record tetap valid |
-| `published_at` invalid (tidak bisa di-parse) | **Record ditolak** (rejected) |
-| datetime tanpa timezone (naive) | Dianggap **UTC** |
-| `published_at` numerik (epoch detik) | Dikonversi ke timestamp |
-| `engagement` invalid / bukan angka non-negatif / non-numeric string | Disimpan sebagai **NULL** |
-| `engagement` numeric string (mis. `"1,204"`, `"3,402"`) | Diparse menjadi angka |
-| HTML pada content | Di-strip sebelum disimpan |
-| spasi berlebih / whitespace | Dinormalisasi (collapse) |
-| source huruf campuran / spasi | Dinormalisasi ke lowercase + trim |
+| Kasus                                                               | Perilaku                                      |
+| ------------------------------------------------------------------- | --------------------------------------------- |
+| `source` kosong setelah normalisasi                                 | **Record ditolak** (rejected)                 |
+| `title` dan `content` sama-sama kosong/null                         | **Record ditolak** (rejected)                 |
+| `published_at` tidak ada / null / string kosong                     | Disimpan sebagai **NULL**, record tetap valid |
+| `published_at` invalid (tidak bisa di-parse)                        | **Record ditolak** (rejected)                 |
+| datetime tanpa timezone (naive)                                     | Dianggap **UTC**                              |
+| `published_at` numerik (epoch detik)                                | Dikonversi ke timestamp                       |
+| `engagement` invalid / bukan angka non-negatif / non-numeric string | Disimpan sebagai **NULL**                     |
+| `engagement` numeric string (mis. `"1,204"`, `"3,402"`)             | Diparse menjadi angka                         |
+| HTML pada content                                                   | Di-strip sebelum disimpan                     |
+| spasi berlebih / whitespace                                         | Dinormalisasi (collapse)                      |
+| source huruf campuran / spasi                                       | Dinormalisasi ke lowercase + trim             |
 
 Prinsip normalisasi: **normalize for consistency, do not invent data, do not change meaning.** Tidak ada fuzzy matching source.
 
@@ -235,6 +235,7 @@ dedupe_key = SHA-256(
 ```
 
 Detail:
+
 - Input key menggunakan **huruf kecil** (case-insensitive) untuk source, title, dan content.
 - **Engagement TIDAK termasuk** dalam dedupe key.
 - Hash disimpan di kolom `dedupe_key` dengan constraint `UNIQUE` di database.
@@ -283,16 +284,17 @@ Idempotent: mengirim payload sama lagi → `inserted: 0`, `duplicates: 15`.
 
 Mencari & memfilter mention. Parameter:
 
-| Parameter | Default | Keterangan |
-|---|---|---|
-| `q` | - | Keyword, case-insensitive, dicari di `title` OR `content` (`ILIKE` dengan escape `%`/`_`) |
-| `source` | - | Filter source **eksak** terhadap source ternormalisasi (lowercase) |
-| `from` | - | Batas bawah `published_at >= from` |
-| `to` | - | Batas atas `published_at <= to` |
-| `page` | `1` | Halaman; harus >= 1 |
-| `limit` | `20` | Jumlah per halaman; 1–100 |
+| Parameter | Default | Keterangan                                                                                |
+| --------- | ------- | ----------------------------------------------------------------------------------------- |
+| `q`       | -       | Keyword, case-insensitive, dicari di `title` OR `content` (`ILIKE` dengan escape `%`/`_`) |
+| `source`  | -       | Filter source **eksak** terhadap source ternormalisasi (lowercase)                        |
+| `from`    | -       | Batas bawah `published_at >= from`                                                        |
+| `to`      | -       | Batas atas `published_at <= to`                                                           |
+| `page`    | `1`     | Halaman; harus >= 1                                                                       |
+| `limit`   | `20`    | Jumlah per halaman; 1–100                                                                 |
 
 Aturan penting:
+
 - `from`/`to` menerima date-only (`YYYY-MM-DD`) atau datetime penuh. **`to` date-only bersifat inklusif hingga akhir hari** (`23:59:59.999Z`); `from` date-only dimulai dari `00:00:00.000Z`.
 - Record dengan `published_at = NULL` tidak masuk hasil filter tanggal.
 - `from` tidak boleh lebih besar dari `to` (400).
@@ -348,12 +350,12 @@ Response:
 
 Semua error dikembalikan sebagai JSON dengan format konsisten:
 
-| Kondisi | Status | Response |
-|---|---|---|
-| Body/query invalid | 400 | `{ "success": false, "message": "...", "errors": [{"field","message"}] }` |
-| JSON body malformed | 400 | `{ "success": false, "message": "Invalid JSON body" }` |
-| Route tidak dikenal | 404 | `{ "success": false, "message": "Route not found" }` |
-| Error server tak terduga | 500 | `{ "success": false, "message": "Internal server error" }` |
+| Kondisi                  | Status | Response                                                                  |
+| ------------------------ | ------ | ------------------------------------------------------------------------- |
+| Body/query invalid       | 400    | `{ "success": false, "message": "...", "errors": [{"field","message"}] }` |
+| JSON body malformed      | 400    | `{ "success": false, "message": "Invalid JSON body" }`                    |
+| Route tidak dikenal      | 404    | `{ "success": false, "message": "Route not found" }`                      |
+| Error server tak terduga | 500    | `{ "success": false, "message": "Internal server error" }`                |
 
 Detail teknis (stack trace, error database, kredensial) hanya dicatat ke **server log**, tidak pernah bocor ke client.
 
@@ -363,14 +365,14 @@ Detail teknis (stack trace, error database, kredensial) hanya dicatat ke **serve
 
 Strategi: **risk-based, bukan mengejar coverage**. Prioritas pada duplicate/idempotency, normalisasi, HTML cleaning, dan date parsing; kemudian search, pagination, dan stats.
 
-| Jenis | Cakupan |
-|---|---|
-| Unit test | `src/utils/` — teks, source, HTML, tanggal, engagement, dedupe key |
-| Schema test | `src/schemas/` — validasi body & query |
-| Repository/database test | `src/repositories/` — insert + ON CONFLICT, search/filter/pagination, stats |
-| Service test | `src/services/` — pipeline normalisasi, bulk summary, idempotency, search mapping, stats |
-| HTTP integration test | `src/app.test.ts` — semua endpoint via server nyata (`app.listen(0)` + `fetch`) |
-| Seed-fidelity test | `src/services/mention.seed.test.ts` — seed asli 15 → 14 inserted + 1 duplicate |
+| Jenis                    | Cakupan                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| Unit test                | `src/utils/` — teks, source, HTML, tanggal, engagement, dedupe key                       |
+| Schema test              | `src/schemas/` — validasi body & query                                                   |
+| Repository/database test | `src/repositories/` — insert + ON CONFLICT, search/filter/pagination, stats              |
+| Service test             | `src/services/` — pipeline normalisasi, bulk summary, idempotency, search mapping, stats |
+| HTTP integration test    | `src/app.test.ts` — semua endpoint via server nyata (`app.listen(0)` + `fetch`)          |
+| Seed-fidelity test       | `src/services/mention.seed.test.ts` — seed asli 15 → 14 inserted + 1 duplicate           |
 
 Command:
 
@@ -400,19 +402,19 @@ Hasil ingestion seed: **received 15, inserted 14, duplicates 1, rejected 0** —
 
 ## 15. Design Decisions & Trade-offs
 
-| Keputusan | Alasan | Trade-off |
-|---|---|---|
-| Schema diperluas (`external_id`, `url`, `author`, `engagement`) | Field tersebut ada di data mentah; menyimpannya mencegah kehilangan informasi | Kolom nullable, tidak ada relasi FK |
-| `engagement` tidak termasuk dedupe key | Dua duplikat bisa beda engagement (lihat `str-99120`); engagement bukan identitas mention | Perubahan engagement pada mention yang sama tidak membuat record baru |
-| Tanggal invalid → record ditolak | Menghindari data kotor; nilai NULL hanya untuk missing date, bukan error | Data dengan tanggal rusak tidak tersimpan |
-| Datetime naive dianggap UTC | Perilaku deterministik & dokumentasi PRD | Waktu lokal aktual sumber bisa bergeser (tidak diketahui) |
-| Engagement parse gagal → NULL | Tidak menggagalkan record hanya karena metrik; konsisten dengan missing date | Informasi engagement hilang untuk record tersebut |
-| Tidak ada fuzzy matching source | Menyatukan entitas berbeda secara salah lebih berbahaya daripada pisah | `thestar` vs `The Star` vs `The Star (Website)` tidak otomatis digabung |
-| `to` date-only inklusif akhir hari | Intuitif untuk filter "sampai tanggal X" | Boundary harus jelas (23:59:59.999Z) |
-| Response API camelCase | Standar umum API; PRD menyebut contoh camelCase | Berbeda dengan nama kolom DB (snake_case) |
-| `group_by` wajib | Mencegah pemanggilan tanpa konteks agregasi; behavior eksplisit | Satu request tambahan bila ingin kedua jenis |
-| Group day dalam UTC | Timestamp tersimpan UTC; konsisten dan bebas zona | Bukan "hari lokal" sumber |
-| Search memakai `ILIKE` | Sederhana, cukup untuk dataset assessment | Bukan full-text search; kurang optimal untuk dataset besar |
+| Keputusan                                                       | Alasan                                                                                    | Trade-off                                                               |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Schema diperluas (`external_id`, `url`, `author`, `engagement`) | Field tersebut ada di data mentah; menyimpannya mencegah kehilangan informasi             | Kolom nullable, tidak ada relasi FK                                     |
+| `engagement` tidak termasuk dedupe key                          | Dua duplikat bisa beda engagement (lihat `str-99120`); engagement bukan identitas mention | Perubahan engagement pada mention yang sama tidak membuat record baru   |
+| Tanggal invalid → record ditolak                                | Menghindari data kotor; nilai NULL hanya untuk missing date, bukan error                  | Data dengan tanggal rusak tidak tersimpan                               |
+| Datetime naive dianggap UTC                                     | Perilaku deterministik & dokumentasi PRD                                                  | Waktu lokal aktual sumber bisa bergeser (tidak diketahui)               |
+| Engagement parse gagal → NULL                                   | Tidak menggagalkan record hanya karena metrik; konsisten dengan missing date              | Informasi engagement hilang untuk record tersebut                       |
+| Tidak ada fuzzy matching source                                 | Menyatukan entitas berbeda secara salah lebih berbahaya daripada pisah                    | `thestar` vs `The Star` vs `The Star (Website)` tidak otomatis digabung |
+| `to` date-only inklusif akhir hari                              | Intuitif untuk filter "sampai tanggal X"                                                  | Boundary harus jelas (23:59:59.999Z)                                    |
+| Response API camelCase                                          | Standar umum API; PRD menyebut contoh camelCase                                           | Berbeda dengan nama kolom DB (snake_case)                               |
+| `group_by` wajib                                                | Mencegah pemanggilan tanpa konteks agregasi; behavior eksplisit                           | Satu request tambahan bila ingin kedua jenis                            |
+| Group day dalam UTC                                             | Timestamp tersimpan UTC; konsisten dan bebas zona                                         | Bukan "hari lokal" sumber                                               |
+| Search memakai `ILIKE`                                          | Sederhana, cukup untuk dataset assessment                                                 | Bukan full-text search; kurang optimal untuk dataset besar              |
 
 ---
 
@@ -467,18 +469,20 @@ npm run dev                 # start server (atau npm run build && npm start)
 
 ## 19. Waktu Pengerjaan
 
-Proyek dikerjakan secara bertahap dalam 8 stage yang masing-masing direview developer:
+Proyek dikerjakan secara bertahap dalam 8 stage, Estimasi total waktu pengerjaan: sekitar 15–20 jam,
+termasuk perencanaan, implementasi, testing, debugging,
+review, dan dokumentasi.
 
-| Stage | Fokus | Status |
-|---|---|---|
-| 1 | Project setup | Selesai & disetujui |
-| 2 | Database setup | Selesai & disetujui |
-| 3 | Data processing | Selesai & disetujui |
-| 4 | Bulk ingestion API | Selesai & disetujui |
-| 5 | Search API | Selesai & disetujui |
-| 6 | Statistics API | Selesai & disetujui |
-| 7 | Testing & quality review | Selesai & disetujui |
-| 8 | Documentation | Selesai |
+| Stage | Fokus                    | Status              |
+| ----- | ------------------------ | ------------------- |
+| 1     | Project setup            | Selesai & disetujui |
+| 2     | Database setup           | Selesai & disetujui |
+| 3     | Data processing          | Selesai & disetujui |
+| 4     | Bulk ingestion API       | Selesai & disetujui |
+| 5     | Search API               | Selesai & disetujui |
+| 6     | Statistics API           | Selesai & disetujui |
+| 7     | Testing & quality review | Selesai & disetujui |
+| 8     | Documentation            | Selesai             |
 
 > Total jam pengerjaan persis: **needs developer confirmation** (belum tercatat akurat di repository).
 
@@ -497,14 +501,14 @@ Proyek dikerjakan secara bertahap dalam 8 stage yang masing-masing direview deve
 
 ## 21. Assessment Traceability
 
-| Requirement Assessment | Implementasi | Test / Verifikasi |
-|---|---|---|
-| Bulk ingestion | `POST /internal/mentions/bulk` → `processBulkMentions` → `bulkInsertMentions` | `src/app.test.ts` (HTTP), `src/repositories/mention.repository.test.ts` (insert/ON CONFLICT), `src/services/mention.service.test.ts` (summary), verifikasi manual curl seed |
-| Duplication / idempotency | `dedupe_key` SHA-256 + `UNIQUE` constraint + `ON CONFLICT DO NOTHING` | `mention.seed.test.ts` (15→14+1), `mention.repository.test.ts` (idempotency), `mention.service.test.ts` (duplicate) |
-| Normalization & HTML cleaning | `src/utils/text.ts`, `src/utils/date.ts`, `src/utils/engagement.ts` | `src/utils/*.test.ts` (23 unit test) |
-| Search | `GET /mentions` → dynamic WHERE + `ILIKE` escape + stable sort | `mention.repository.search.test.ts`, `mention.search.test.ts`, `src/app.test.ts` |
-| Pagination & date filter | Zod schema (`page`/`limit`/`from`/`to`), `LIMIT/OFFSET`, count query | `mention.schema.test.ts`, `mention.repository.search.test.ts`, `src/app.test.ts` |
-| Statistics | `GET /mentions/stats` → `statsBySource` / `statsByDay` (UTC) | `mention.repository.stats.test.ts`, `mention.stats.test.ts`, `src/app.test.ts` |
-| Error handling | Global `notFoundHandler` + `errorHandler` di `src/app.ts` | `src/app.test.ts` (404, malformed JSON 400, 500) |
-| Validasi | Zod `bulkMentionSchema`, `searchMentionsQuerySchema`, `statsQuerySchema` | `mention.schema.test.ts`, `src/app.test.ts` (400 cases) |
-| Extended fields persist | INSERT 9 kolom (termasuk `external_id`, `url`, `author`, `engagement`) | `mention.seed.test.ts` (assert non-null), `mention.repository.test.ts` |
+| Requirement Assessment        | Implementasi                                                                  | Test / Verifikasi                                                                                                                                                           |
+| ----------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bulk ingestion                | `POST /internal/mentions/bulk` → `processBulkMentions` → `bulkInsertMentions` | `src/app.test.ts` (HTTP), `src/repositories/mention.repository.test.ts` (insert/ON CONFLICT), `src/services/mention.service.test.ts` (summary), verifikasi manual curl seed |
+| Duplication / idempotency     | `dedupe_key` SHA-256 + `UNIQUE` constraint + `ON CONFLICT DO NOTHING`         | `mention.seed.test.ts` (15→14+1), `mention.repository.test.ts` (idempotency), `mention.service.test.ts` (duplicate)                                                         |
+| Normalization & HTML cleaning | `src/utils/text.ts`, `src/utils/date.ts`, `src/utils/engagement.ts`           | `src/utils/*.test.ts` (23 unit test)                                                                                                                                        |
+| Search                        | `GET /mentions` → dynamic WHERE + `ILIKE` escape + stable sort                | `mention.repository.search.test.ts`, `mention.search.test.ts`, `src/app.test.ts`                                                                                            |
+| Pagination & date filter      | Zod schema (`page`/`limit`/`from`/`to`), `LIMIT/OFFSET`, count query          | `mention.schema.test.ts`, `mention.repository.search.test.ts`, `src/app.test.ts`                                                                                            |
+| Statistics                    | `GET /mentions/stats` → `statsBySource` / `statsByDay` (UTC)                  | `mention.repository.stats.test.ts`, `mention.stats.test.ts`, `src/app.test.ts`                                                                                              |
+| Error handling                | Global `notFoundHandler` + `errorHandler` di `src/app.ts`                     | `src/app.test.ts` (404, malformed JSON 400, 500)                                                                                                                            |
+| Validasi                      | Zod `bulkMentionSchema`, `searchMentionsQuerySchema`, `statsQuerySchema`      | `mention.schema.test.ts`, `src/app.test.ts` (400 cases)                                                                                                                     |
+| Extended fields persist       | INSERT 9 kolom (termasuk `external_id`, `url`, `author`, `engagement`)        | `mention.seed.test.ts` (assert non-null), `mention.repository.test.ts`                                                                                                      |
